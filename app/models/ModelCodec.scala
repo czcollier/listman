@@ -4,7 +4,7 @@ import reactivemongo.bson._
 import scala.collection.mutable.ListBuffer
 import reactivemongo.bson.DefaultBSONHandlers._
 
-object modelCodec {
+object ModelCodec {
   implicit object FieldInfoCodec extends BSONDocumentReader[FieldInfo] with BSONDocumentWriter[FieldInfo] {
     def read(doc: BSONDocument): FieldInfo = {
       FieldInfo(
@@ -87,14 +87,14 @@ object modelCodec {
     }
   }
 
-  implicit object PropertiesCodec extends ValMapCodec[BSONValue]
+  implicit object PropertiesCodec extends ValMapCodec[String]
 
   implicit object RawCodec extends BSONDocumentReader[Raw] with BSONDocumentWriter[Raw] {
     def read(doc: BSONDocument): Raw = {
       Raw(
         doc.getAs[BSONObjectID]("_id"),
         doc.getAs[BSONObjectID]("componentId"),
-        doc.getAs[Map[String, BSONValue]]("properties").getOrElse(Map())
+        doc.getAs[Map[String, String]]("properties").getOrElse(Map())
       )
     }
 
