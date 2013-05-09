@@ -1,5 +1,5 @@
 package models
-
+/*
 import reactivemongo.bson._
 import scala.collection.mutable.ListBuffer
 import reactivemongo.bson.DefaultBSONHandlers._
@@ -87,14 +87,14 @@ object ModelCodec {
     }
   }
 
-  implicit object PropertiesCodec extends ValMapCodec[String]
+  implicit object PropertiesCodec extends ValMapCodec[BSONValue]
 
   implicit object RawCodec extends BSONDocumentReader[Raw] with BSONDocumentWriter[Raw] {
     def read(doc: BSONDocument): Raw = {
       Raw(
         doc.getAs[BSONObjectID]("_id"),
         doc.getAs[BSONObjectID]("componentId"),
-        doc.getAs[Map[String, String]]("properties").getOrElse(Map())
+        doc.getAs[Map[String, BSONValue]]("properties").getOrElse(Map())
       )
     }
 
@@ -113,3 +113,4 @@ object ModelCodec {
     }
   }
 }
+*/

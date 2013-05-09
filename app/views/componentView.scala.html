@@ -1,0 +1,23 @@
+@(component: models.ComponentInfo, componentForm: Form[models.ComponentInfo])
+
+@import helper._
+@import helper.twitterBootstrap._
+
+@main("Component") {
+<div class="row">
+    <div class="span8">
+        @helper.form(action = (routes.Application.accept), 'class -> "form-horizontal") {
+        <h2>@component.name</h2>
+        @helper.inputText(componentForm("name"))
+        @helper.inputText(componentForm("_id"))
+        @repeat(componentForm("fields"), min = 1) { cf =>
+            @inputText(cf("id"))
+            @inputText(cf("name"))
+            @inputText(cf("dataType"))
+        }
+        <div class="form-actions">
+            <input class="btn btn-primary" type="submit">
+        </div>
+        }
+    </div>
+}

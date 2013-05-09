@@ -3,58 +3,50 @@ package controllers
 import play.api.mvc._
 import play.modules.reactivemongo._
 import play.modules.reactivemongo.json.collection.JSONCollection
-//import play.modules.reactivemongo.json.BSONFormats._
-import play.api.libs.json._
+import models.{ComponentInfo, Configuration}
 import scala.concurrent.Future
+import ControllerHelp._
+import play.api.libs.json.Json
+import views.html
 
 object Application extends Controller with MongoController {
-  import models._
+  private def cfgs: JSONCollection = db.collection[JSONCollection]("configs")
+
   import JsonCodec._
-
-  case class BadComponent(n: String) extends RuntimeException {
-    override def getMessage = n
-  }
-  case object BadSession extends RuntimeException
-
-  def cfgs: JSONCollection = db.collection[JSONCollection]("configs")
-  def data: JSONCollection = db.collection[JSONCollection]("data")
-
-
-  private def jsonSerialize[T](value: Future[T])(implicit tjs : Writes[T]) = {
-    value.map(Json.toJson(_))
-      .map(Ok(_))
-      .recover {
-        case e: BadComponent => NotFound("")
-        case e =>  BadRequest(e.getClass.getName)
-      }
-  }
-
-  private def byId(idVal: String, fieldName: String = "_id") =
-    Json.obj(fieldName -> Json.obj("$oid" -> idVal))
-
-  val stockId = "5182c2cc5977ba5f00365868"
 
   def index = Action {
     Ok(views.html.index("Your new application is ready."))
   }
 
-  def configs(name: String) = Action {
+  def accept = Action { implicit request =>
+    forms.componentForm.bindFromRequest.fold(
+      errors => BadRequest(errors.toString),
+      comp => Ok(html.componentView(
+        comp, forms.componentForm.fill(comp)
+    )))
+  }
+
+  def get(id: String) = Action {
     Async {
+      println("==========> " + id)
       val res = for {
         cfg <- cfgs.find(byId(stockId)).cursor[Configuration].toList
-        results <- {
+        component <- {
           cfg.headOption match {
             case None => Future.failed(BadSession)
-            case Some(q) => q.components.get(name) match {
-              case None => Future.failed(BadComponent(name))
-              case Some(c) => data.find(byId(c._id.get.stringify, "componentId"))
-                  .cursor[Raw].toList
+            case Some(q) => {
+              q.components.find(c => c._id.get.stringify.equals(id)) match {
+                case None => Future(ComponentInfo(None, None, List()))
+                case Some(c) =>  Future(c)
+              }
             }
           }
         }
-      } yield results
+      } yield component
 
-      jsonSerialize(res)
+      for (r <- res)
+        yield { println(r);Ok(views.html.componentView(
+          r, forms.componentForm.fill(r))) }
     }
   }
 }

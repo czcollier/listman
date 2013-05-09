@@ -18,31 +18,31 @@ object JsonCodec {
 //      s => JsString(s.stringify)
 //    }
 //  )
+
   implicit val objectMapFormat = new Format[Map[String, BSONValue]] {
     def writes(map: Map[String, BSONValue]): JsValue =
       Json.obj(map.map{ case (s, o) =>
         val ret:(String, JsValueWrapper) = o match {
           case v:BSONString => s -> JsString(v.value)
-          case v:BSONNumberLike => s -> JsNumber(BigDecimal(v.toDouble))
-          case v:BSONArray => s -> JsArray(v)
+          case v:BSONDouble => s -> JsNumber(BigDecimal(v.value))
+          case v:BSONInteger => s -> JsNumber(BigDecimal(v.value))
+          case v:BSONLong => s -> JsNumber(BigDecimal(v.value))
+          case x => s -> JsString(x.toString)
         }
         ret
       }.toSeq:_*)
 
 
-    def reads(jv: JsValue): JsResult[Map[String, Object]] =
+    def reads(jv: JsValue): JsResult[Map[String, BSONValue]] =
       JsSuccess(jv.as[Map[String, JsValue]].map{case (k, v) =>
         k -> (v match {
-          case s:JsString => s.as[String]
-          case l => l.as[List[String]]
+          case s:JsString => BSONString(s.as[String])
+          case n:JsNumber => BSONDouble(n.as[Double])
+          case x => BSONString(x.toString)
         })
       })
   }
 
-  class RawValueFormat[T] extends Format[T] {
-    def reads(json: JsValue) = (json \ )
-    def writes(o: T) = ???
-  }
   implicit val fieldFormat = Json.format[FieldInfo]
   implicit val componentInfoFormat = Json.format[ComponentInfo]
   implicit val configurationFormat = Json.format[Configuration]
