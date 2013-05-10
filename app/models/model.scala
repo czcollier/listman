@@ -4,6 +4,7 @@ import reactivemongo.bson._
 
 case class Configuration(
   _id: Option[BSONObjectID],
+  accountId: Option[BSONObjectID],
   name: Option[String],
   components: List[ComponentInfo] = List())
 
@@ -22,9 +23,10 @@ case class FieldInfo(
 
 case class User(
   _id: Option[BSONObjectID],
-  accountId: Option[BSONObjectID],
+  accountIds: List[BSONObjectID],
   username: String,
-  password: String)
+  password: String
+)
 
 case class Account(
   _id: Option[BSONObjectID],

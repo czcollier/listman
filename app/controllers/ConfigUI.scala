@@ -14,9 +14,9 @@ object ConfigUI extends JsonController with MongoController with Secured {
 
   import JsonCodec._
 
-  def index = Action {
-    Ok(views.html.index("Your new application is ready."))
-  }
+  def index = withAuth { user => implicit request => {
+    Ok(views.html.index(user.username))
+  }}
 
   def accept(id: String) = Action { implicit request =>
     forms.componentForm.bindFromRequest.fold(
@@ -34,14 +34,14 @@ object ConfigUI extends JsonController with MongoController with Secured {
           }
           val newCfg = cfg.copy(components = comps)
           cfgs.update(byId(stockId), newCfg).map { nd =>
-            Redirect(routes.ConfigUI.get(newComp._id.get.stringify))
+            Redirect(routes.ConfigUI.component(newComp._id.get.stringify))
           }
         }
     })
   }
 
 
-  def get(id: String) = withAuth { username => implicit request =>
+  def component(id: String) = withAuth { username => implicit request =>
     Async {
       val res = for {
         cfg <- cfgs.find(byId(stockId)).cursor[Configuration].toList

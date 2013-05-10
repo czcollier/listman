@@ -10,42 +10,53 @@ import play.modules.reactivemongo.json.collection.JSONCollection
 import play.api.libs.json.Json
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
+import play.api.cache.Cache
+import java.util.UUID
+import controllers.ControllerHelp.BadUser
+import play.api.data.validation.Constraints._
 
 object Auth extends Controller with MongoController {
-
   import JsonCodec._
 
   private def users: JSONCollection = db.collection[JSONCollection]("users")
 
-  val loginForm = Form(
-    tuple(
-      "email" -> email,
-      "password" -> text
-    ) verifying("Invalid user name or password", fields => fields match {
-      case (e, p) => {
-        Await.result(getUser(e, p).map(x => x match {
-          case Some(y) => true
-          case None => false
-        }), 1.second)
-      }
-    })
-  )
+  val loginForm = Form(tuple(
+    "email" -> email.verifying(nonEmpty),
+    "password" -> text
+  ))
 
-  def getUser(username: String, password: String): Future[Option[User]] = {
+  def getUser(username: String, password: String): Future[(UUID, User)] = {
     val query = Json.obj("username" -> username, "password" -> password)
+
     for {
-      u <- users.find(query).cursor[User].headOption
-    } yield u
+      qr <- users.find(query).cursor[User].toList
+      first <- qr.headOption match {
+        case Some(u) => Future(UUID.randomUUID, u)
+        case None => Future.failed(BadUser)
+      }
+    } yield first
   }
 
   def login = Action { implicit request =>
     Ok(html.login(loginForm))
   }
 
+
   def authenticate = Action { implicit request =>
     loginForm.bindFromRequest.fold(
-      formWithErrors => BadRequest(html.login(formWithErrors)),
-      user => Redirect(routes.ConfigUI.index()).withSession(Security.username -> user._1)
+      errs => BadRequest(html.login(errs)),
+      good => Await.result(getUser(good._1, good._2).map {
+        sess => {
+          import play.api.Play.current
+          Cache.set(sess._1.toString, sess._2)
+          Redirect(routes.ConfigUI.index()).withSession(Security.username -> sess._1.toString)
+        }
+      }
+      recover {
+        case e => {
+          BadRequest(html.login(loginForm.fill(good).withError("", "invalid credentials")))
+        }
+      }, 1.second)
     )
   }
 
@@ -57,11 +68,17 @@ object Auth extends Controller with MongoController {
 }
 trait Secured {
 
-  def username(request: RequestHeader) = request.session.get(Security.username)
+  def username(request: RequestHeader)(implicit app: play.api.Application): Option[User] = {
+    request.session.get(Security.username) match {
+      case Some(id) => Cache.get(id).asInstanceOf[Option[User]]
+      case None => None
+    }
+  }
 
   def onUnauthorized(request: RequestHeader) = Results.Redirect(routes.Auth.login())
 
-  def withAuth(f: => String => Request[AnyContent] => Result) = {
+  def withAuth(f: => User => Request[AnyContent] => Result) = {
+    import play.api.Play.current
     Security.Authenticated(username, onUnauthorized) { user =>
       Action(request => f(user)(request))
     }

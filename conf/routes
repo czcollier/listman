@@ -4,7 +4,7 @@
 
 # Configuration UI
 GET     /                               controllers.ConfigUI.index
-GET     /setup/ui/component/:id         controllers.ConfigUI.get(id: String)
+GET     /setup/ui/component/:id         controllers.ConfigUI.component(id: String)
 POST    /setup/ui/component/:id         controllers.ConfigUI.accept(id: String)
 
 # Configuration API

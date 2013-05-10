@@ -10,6 +10,7 @@ object ControllerHelp {
     override def getMessage = n
   }
   case object BadSession extends RuntimeException
+  case object BadUser extends RuntimeException
 
   def byId(idVal: String, fieldName: String = "_id") =
     Json.obj(fieldName -> Json.obj("$oid" -> idVal))
