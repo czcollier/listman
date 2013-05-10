@@ -6,10 +6,10 @@
 @main("Component") {
 <div class="row">
     <div class="span8">
-        @helper.form(action = (routes.Application.accept), 'class -> "form-horizontal") {
-        <h2>@component.name</h2>
-        @helper.inputText(componentForm("name"))
+    @helper.form(action = (routes.ConfigUI.accept(component._id.get.stringify)), 'class -> "form-horizontal") {
+        <h2>Component: @component.name</h2>
         @helper.inputText(componentForm("_id"))
+        @helper.inputText(componentForm("name"))
         @repeat(componentForm("fields"), min = 1) { cf =>
             @inputText(cf("id"))
             @inputText(cf("name"))
@@ -17,7 +17,10 @@
         }
         <div class="form-actions">
             <input class="btn btn-primary" type="submit">
+            <input class="btn btn-primary" type="button" value="add field" onclick="this.form.elements['addField'].value = 'true'; document.forms[0].submit();">
+
         </div>
-        }
+        <input type="hidden" name="addField" id="addField" value="false"/>
+    }
     </div>
 }

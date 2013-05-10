@@ -8,6 +8,8 @@ import reactivemongo.bson.BSONObjectID
 import play.api.data.format.Formats._
 
 object forms {
+
+
   val fieldInfoMapping = mapping(
     "id" -> optional(of[String]),
     "name" -> optional(of[String]),

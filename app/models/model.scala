@@ -15,12 +15,22 @@ case class ComponentInfo(
 case class FieldInfo(
   _id: Option[BSONObjectID],
   name: Option[String],
-  dataType: Option[String])
+  dataType: Option[String]) {
+
+  def this() = this(Some(BSONObjectID.generate), Some(""), Some(""))
+}
 
 case class User(
   _id: Option[BSONObjectID],
+  accountId: Option[BSONObjectID],
   username: String,
   password: String)
+
+case class Account(
+  _id: Option[BSONObjectID],
+  name: Option[String],
+  configurationIds: List[BSONObjectID]
+)
 
 case class Raw(
   _id: Option[BSONObjectID],

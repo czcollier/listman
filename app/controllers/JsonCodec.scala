@@ -47,4 +47,5 @@ object JsonCodec {
   implicit val componentInfoFormat = Json.format[ComponentInfo]
   implicit val configurationFormat = Json.format[Configuration]
   implicit val rawFormat = Json.format[Raw]
+  implicit val userFormat = Json.format[User]
 }
