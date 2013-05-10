@@ -20,7 +20,10 @@ trait JsonController extends Controller with MongoController {
       .map(Ok(_))
       .recover {
       case e: BadComponent => NotFound("component type %s not found".format(e.getMessage))
-      case e =>  BadRequest(e.getClass.getName)
+      case e =>  {
+        e.printStackTrace()
+        BadRequest(e.getClass.getName)
+      }
     }
   }
 

@@ -1,20 +1,48 @@
 package controllers
 
 import play.modules.reactivemongo.MongoController
-import models.{ComponentInfo, Configuration}
+import models.{Configuration, ComponentInfo}
 import scala.concurrent.Future
-import controllers.ControllerHelp._
-import reactivemongo.bson.BSONObjectID
 import play.api.mvc.Action
+import reactivemongo.bson.BSONDocument
+import play.api.libs.json.{JsObject, Json}
 
 object ConfigAPI extends JsonController with MongoController with Secured {
 
   import JsonCodec._
 
-  def configuration = Action {
+  def list = Action {
+
+    val query = BSONDocument("$query" -> BSONDocument())
+
+    Async {
+      val res = cfgs.find(Json.obj()).cursor[Configuration].toList
+      jsonSerialize(res)
+    }
+  }
+
+  def read = Action {
     Async {
       withConfiguration { cfg =>
         jsonSerialize(Future(cfg))
+      }
+    }
+  }
+
+  def create = Action(parse.json) { request =>
+    Async {
+      cfgs.insert(request.body).map(lastError =>
+        Ok("Mongo LastErorr:%s".format(lastError)))
+    }
+  }
+
+  def update(id: String) = Action(parse.json) { request =>
+    Async {
+      withConfiguration { cfg =>
+        val cfg = request.body.as[Configuration]
+
+        cfgs.insert(request.body).map(lastError =>
+          Ok("Mongo LastErorr:%s".format(lastError)))
       }
     }
   }
