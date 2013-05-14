@@ -10,16 +10,14 @@ import play.api.libs.json.{JsObject, Json}
 object ConfigAPI extends JsonController with MongoController with Secured {
 
   import JsonCodec._
+  import play.modules.reactivemongo.json.BSONFormats._
 
-  def list = Action {
-
-    val query = BSONDocument("$query" -> BSONDocument())
-
+  def list = withAuth { sess => implicit request => {
     Async {
-      val res = cfgs.find(Json.obj()).cursor[Configuration].toList
+      val res = cfgs.find(Json.obj("accountId" -> sess.user.accountIds.headOption)).cursor[Configuration].toList
       jsonSerialize(res)
     }
-  }
+  }}
 
   def read = Action {
     Async {
@@ -31,7 +29,7 @@ object ConfigAPI extends JsonController with MongoController with Secured {
 
   def create = Action(parse.json) { request =>
     Async {
-      cfgs.insert(request.body).map(lastError =>
+      cfgs.save(request.body).map(lastError =>
         Ok("Mongo LastErorr:%s".format(lastError)))
     }
   }
@@ -39,13 +37,12 @@ object ConfigAPI extends JsonController with MongoController with Secured {
   def update(id: String) = Action(parse.json) { request =>
     Async {
       withConfiguration { cfg =>
-        val cfg = request.body.as[Configuration]
-
-        cfgs.insert(request.body).map(lastError =>
+        cfgs.save(request.body).map(lastError =>
           Ok("Mongo LastErorr:%s".format(lastError)))
       }
     }
   }
+
   def component(id: String) = withAuth { username => implicit request =>
     Async {
       val res = withConfiguration { cfg =>

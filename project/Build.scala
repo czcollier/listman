@@ -13,10 +13,14 @@ object ApplicationBuild extends Build {
     anorm
   )
 
-
   val main = play.Project(appName, appVersion, appDependencies).settings(
-    // Add your own project settings here      
+    // Add your own project settings here
+    resolvers ++= Seq(
+      Resolver.file("Local repo", file("/home/ccollier/.ivy2/local"))(Resolver.ivyStylePatterns),
+      "Sedis" at "http://pk11-scratch.googlecode.com/svn/trunk"
+    ),
     libraryDependencies ++= Seq(
+      "com.typesafe" %% "play-plugins-redis" % "2.1-1-RC3-SNAPSHOT" changing(),
       "org.reactivemongo" %% "play2-reactivemongo" % "0.9"
   ))
 }

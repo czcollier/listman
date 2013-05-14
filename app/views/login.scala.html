@@ -1,4 +1,4 @@
-@(loginForm: Form[(String,String)])(implicit flash: Flash)
+@(loginForm: Form[(String,String)])(implicit flash: Flash, lmSession: Option[LMSession])
 
 <header>
     <a href="@routes.ConfigUI.index" id="logo"><span>home</span></a>

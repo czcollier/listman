@@ -15,7 +15,7 @@ import java.util.UUID
 import controllers.ControllerHelp.BadUser
 import play.api.data.validation.Constraints._
 
-object Auth extends Controller with MongoController {
+object Auth extends Controller with MongoController with Secured {
   import JsonCodec._
 
   private def users: JSONCollection = db.collection[JSONCollection]("users")
@@ -25,13 +25,13 @@ object Auth extends Controller with MongoController {
     "password" -> text
   ))
 
-  def getUser(username: String, password: String): Future[(UUID, User)] = {
+  def getUser(username: String, password: String): Future[LMSession] = {
     val query = Json.obj("username" -> username, "password" -> password)
 
     for {
       qr <- users.find(query).cursor[User].toList
       first <- qr.headOption match {
-        case Some(u) => Future(UUID.randomUUID, u)
+        case Some(u) => Future(LMSession(UUID.randomUUID.toString, u))
         case None => Future.failed(BadUser)
       }
     } yield first
@@ -41,15 +41,14 @@ object Auth extends Controller with MongoController {
     Ok(html.login(loginForm))
   }
 
-
   def authenticate = Action { implicit request =>
     loginForm.bindFromRequest.fold(
       errs => BadRequest(html.login(errs)),
       good => Await.result(getUser(good._1, good._2).map {
         sess => {
           import play.api.Play.current
-          Cache.set(sess._1.toString, sess._2)
-          Redirect(routes.ConfigUI.index()).withSession(Security.username -> sess._1.toString)
+          Cache.set(sess.key, sess)
+          Redirect(routes.ConfigUI.index()).withSession(Security.username -> sess.key)
         }
       }
       recover {
@@ -66,22 +65,28 @@ object Auth extends Controller with MongoController {
     )
   }
 }
+
 trait Secured {
 
-  def username(request: RequestHeader)(implicit app: play.api.Application): Option[User] = {
+  def getSession(request: RequestHeader)(implicit app: play.api.Application): Option[LMSession] = {
     request.session.get(Security.username) match {
-      case Some(id) => Cache.get(id).asInstanceOf[Option[User]]
+      case Some(id) => Cache.getAs[LMSession](id)
       case None => None
     }
   }
 
   def onUnauthorized(request: RequestHeader) = Results.Redirect(routes.Auth.login())
 
-  def withAuth(f: => User => Request[AnyContent] => Result) = {
+  def withAuth(f: => LMSession => Request[AnyContent] => Result) = {
     import play.api.Play.current
-    Security.Authenticated(username, onUnauthorized) { user =>
+    Security.Authenticated(getSession, onUnauthorized) { user =>
       Action(request => f(user)(request))
     }
+  }
+
+  implicit def lmSession(implicit request: RequestHeader): Option[LMSession] = {
+    import play.api.Play.current
+    getSession(request)
   }
 
   /**

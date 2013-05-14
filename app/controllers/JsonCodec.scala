@@ -9,15 +9,15 @@ object JsonCodec {
   import play.api.libs.json.Json
   import play.modules.reactivemongo.json.BSONFormats._
 
-//  implicit val objectIdFormat = Format[BSONObjectID](
-//    (__ \ "$oid").read[String].map { s =>
-//      BSONObjectID(s)
-//    },
-//
-//    Writes[BSONObjectID] {
-//      s => JsString(s.stringify)
-//    }
-//  )
+  implicit val objectIdFormat = Format[BSONObjectID](
+    (__ \ "$oid").read[String].map { s =>
+      BSONObjectID(s)
+    },
+
+    Writes[BSONObjectID] {
+      s => JsString(s.stringify)
+    }
+  )
 
   implicit val objectMapFormat = new Format[Map[String, BSONValue]] {
     def writes(map: Map[String, BSONValue]): JsValue =

@@ -15,8 +15,8 @@ object ConfigUI extends JsonController with MongoController with Secured {
   import JsonCodec._
 
   def index = withAuth { user => implicit request => {
-    Ok(views.html.index(user.username))
-  }}
+    Ok(views.html.index("welcome"))
+  } }
 
   def accept(id: String) = Action { implicit request =>
     forms.componentForm.bindFromRequest.fold(
