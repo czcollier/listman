@@ -9,8 +9,8 @@ POST    /setup/ui/component/:id         controllers.ConfigUI.accept(id: String)
 
 # Configuration API
 GET     /setup/component/:id            controllers.ConfigAPI.component(id: String)
-GET     /setup/configuration/x          controllers.ConfigAPI.list
-GET     /setup/configuration            controllers.ConfigAPI.read
+GET     /setup/configuration            controllers.ConfigAPI.list
+GET     /setup/configuration/:id        controllers.ConfigAPI.read(id: String)
 POST    /setup/configuration/:id        controllers.ConfigAPI.update(id: String)
 PUT     /setup/configuration            controllers.ConfigAPI.create
 

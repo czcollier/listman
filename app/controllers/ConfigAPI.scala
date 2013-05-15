@@ -4,7 +4,7 @@ import play.modules.reactivemongo.MongoController
 import models.{Configuration, ComponentInfo}
 import scala.concurrent.Future
 import play.api.mvc.Action
-import reactivemongo.bson.BSONDocument
+import reactivemongo.bson.{BSONObjectID, BSONDocument}
 import play.api.libs.json.{JsObject, Json}
 
 object ConfigAPI extends JsonController with MongoController with Secured {
@@ -14,18 +14,22 @@ object ConfigAPI extends JsonController with MongoController with Secured {
 
   def list = withAuth { sess => implicit request => {
     Async {
-      val res = cfgs.find(Json.obj("accountId" -> sess.user.accountIds.headOption)).cursor[Configuration].toList
+      val query = Json.obj("accountId" -> sess.user.accountIds.headOption)
+      val res = cfgs.find(query).cursor[Configuration].toList
       jsonSerialize(res)
     }
   }}
 
-  def read = Action {
+  def read(id: String) = withAuth { sess => implicit request => {
     Async {
-      withConfiguration { cfg =>
-        jsonSerialize(Future(cfg))
-      }
+      val query = Json.obj(
+        "accountId" -> sess.user.accountIds.headOption,
+        "_id" -> BSONObjectID(id)
+      )
+      val res = cfgs.find(query).cursor[Configuration].headOption
+      jsonSerialize(res)
     }
-  }
+  }}
 
   def create = Action(parse.json) { request =>
     Async {

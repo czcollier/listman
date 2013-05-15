@@ -71,7 +71,10 @@ trait Secured {
   def getSession(request: RequestHeader)(implicit app: play.api.Application): Option[LMSession] = {
     request.session.get(Security.username) match {
       case Some(id) => Cache.getAs[LMSession](id)
-      case None => None
+      case None => request.getQueryString("lmSessionId") match {
+        case Some(qsId) => Cache.getAs[LMSession](qsId)
+        case None => None
+      }
     }
   }
 
