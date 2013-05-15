@@ -1,4 +1,6 @@
 @(message: String)(implicit session: Option[LMSession])
 
 @main("Welcome") {
+  <h2>listman</h2>
+  <div class="row">Your session ID: @session.get.key</div>
 }

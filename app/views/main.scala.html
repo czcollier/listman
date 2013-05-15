@@ -1,12 +1,9 @@
 @(title: String)(content: Html)(implicit lmSession: Option[LMSession])
-
-<!DOCTYPE html>
-
 <html>
     <head>
      <style type="text/css">
       body {
-        padding-top: 20px;
+        padding-top: 60px;
         padding-bottom: 40px;
       }
 
@@ -61,19 +58,19 @@
           <div class="nav-collapse collapse">
             <ul class="nav">
               <li class="active"><a href="#">Home</a></li>
-              </li>
             </ul>
             <ul class="nav pull-right">
             @for(s <- lmSession) {
                 <li class="active"><a href="#">@s.user.username</a></li>
             }
             </ul>
-          </div><!--/.nav-collapse -->
+          </div>
         </div>
       </div>
     </div>
-        <div class="container">
-        @content
-        </div>
+    <div class="container">
+
+    @content
+    </div>
     </body>
 </html>
