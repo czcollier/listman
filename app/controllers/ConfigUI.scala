@@ -17,7 +17,7 @@ object ConfigUI extends JsonController with MongoController with Secured {
 
   def index = withAuth { user => implicit request => {
     import play.api.Play.current
-    Cache.set("doubleValue", 2.3)
+    Cache.set("doubleValue", 3.5)
     Ok(views.html.index("welcome"))
   }}
 
