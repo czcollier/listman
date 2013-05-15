@@ -20,7 +20,7 @@ object ApplicationBuild extends Build {
       "Sedis" at "http://pk11-scratch.googlecode.com/svn/trunk"
     ),
     libraryDependencies ++= Seq(
-      "com.typesafe" %% "play-plugins-redis" % "2.1-1-RC3-SNAPSHOT" changing(),
+      "com.typesafe" %% "play-plugins-redis" % "2.1-2-RC2-SNAPSHOT" changing(),
       "org.reactivemongo" %% "play2-reactivemongo" % "0.9"
   ))
 }

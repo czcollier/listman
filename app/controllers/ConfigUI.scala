@@ -9,14 +9,17 @@ import ControllerHelp._
 import play.api.libs.json.Json
 import views.html
 import reactivemongo.bson.{BSONDocument, BSONObjectID}
+import play.api.cache.Cache
 
 object ConfigUI extends JsonController with MongoController with Secured {
 
   import JsonCodec._
 
   def index = withAuth { user => implicit request => {
+    import play.api.Play.current
+    Cache.set("doubleValue", 2.3)
     Ok(views.html.index("welcome"))
-  } }
+  }}
 
   def accept(id: String) = Action { implicit request =>
     forms.componentForm.bindFromRequest.fold(
