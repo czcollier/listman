@@ -27,7 +27,9 @@ case class User(
   accountIds: List[BSONObjectID],
   username: String,
   password: String
-)
+) {
+  def defaultAccountId = accountIds.headOption
+}
 
 case class Account(
   _id: Option[BSONObjectID],

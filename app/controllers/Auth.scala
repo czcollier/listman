@@ -60,7 +60,7 @@ object Auth extends Controller with MongoController with Secured {
   }
 
   def logout = Action {
-    Redirect(routes.Auth.login).withNewSession.flashing(
+    Redirect(routes.Auth.login()).withNewSession.flashing(
       "success" -> "You are now logged out."
     )
   }

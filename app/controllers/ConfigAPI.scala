@@ -4,18 +4,11 @@ import play.modules.reactivemongo.MongoController
 import models.{Configuration, ComponentInfo}
 import scala.concurrent.Future
 import play.api.mvc.Action
-<<<<<<< Updated upstream
 import reactivemongo.bson.BSONObjectID
 import play.api.libs.json._
-import play.modules.reactivemongo.json.BSONFormats._
-import reactivemongo.core.commands.Status.ResultMaker
+import play.modules.reactivemongo.json.BSONFormats._ //this is necessary
 
-//this is necessary
 import JsonCodec._
-=======
-import reactivemongo.bson.{BSONObjectID, BSONDocument}
-import play.api.libs.json._
->>>>>>> Stashed changes
 
 object ConfigAPI extends JsonController with MongoController with Secured {
 
@@ -39,20 +32,30 @@ object ConfigAPI extends JsonController with MongoController with Secured {
     }
   }}
 
+  def addAccountId(id: Option[BSONObjectID]) = (__).json.update {
+    __.read[JsObject].map {
+      o => o ++ Json.obj("accountId" -> id)
+    }
+  }
+
   def createWithTransform = withAuth { sess => implicit request => {
-    val xfrm = (__).json.update(__.read[JsObject].map { o => o ++ Json.obj("accountId" -> sess.user.accountIds.headOption) } )
-    val jsonBody = request.body.asJson.get.transform(xfrm).asOpt.get
+    val jsonBody = request.body.asJson.get.transform(addAccountId(sess.user.accountIds.headOption)).asOpt.get
     println(jsonBody)
     Async {
-      cfgs.save(jsonBody).map(lastError =>
-        Ok("Mongo LastErorr:%s".format(lastError)))
+      cfgs.save(jsonBody).map(_ => Ok)
     }
   }}
 
   def create = withAuth(parse.json) { sess => implicit req => {
-    val newCfg = req.body.asOpt[Configuration]
-    Async {
-      cfgs.save(newCfg).map { _=>  Ok }
+    val newCfg = req.body.as[Configuration]
+    if (newCfg._id.isDefined) {
+      BadRequest("new objects can not have IDs pre-assigned")
+    }
+    else {
+      val cfgWithAccount = newCfg.copy(accountId = sess.user.defaultAccountId)
+      Async {
+        cfgs.save(cfgWithAccount).map { _=>  Ok }
+      }
     }
   }}
 
