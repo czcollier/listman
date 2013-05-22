@@ -28,7 +28,7 @@ case class User(
   username: String,
   password: String
 ) {
-  def defaultAccountId = accountIds.headOption
+
 }
 
 case class Account(

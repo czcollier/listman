@@ -2,6 +2,8 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
+GET     /experiments/merge              controllers.Experiments.merge
+
 # Configuration UI
 GET     /                               controllers.ConfigUI.index
 GET     /setup/ui/component/:id         controllers.ConfigUI.component(id: String)
@@ -12,7 +14,7 @@ GET     /setup/component/:id            controllers.ConfigAPI.component(id: Stri
 GET     /setup/configuration            controllers.ConfigAPI.list
 GET     /setup/configuration/:id        controllers.ConfigAPI.read(id: String)
 POST    /setup/configuration/:id        controllers.ConfigAPI.update(id: String)
-PUT     /setup/configuration/g            controllers.ConfigAPI.create
+PUT     /setup/configuration            controllers.ConfigAPI.create
 
 # Data API
 GET     /data/:comp/list                controllers.UserData.list(comp: String)

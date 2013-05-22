@@ -21,14 +21,18 @@ object ConfigAPI extends JsonController with MongoController with Secured {
     }
   }}
 
+  private def get(id: String, acctId: Option[BSONObjectID]) = {
+    val query = Json.obj(
+      "accountId" -> acctId,
+      "_id" -> BSONObjectID(id)
+    )
+
+    cfgs.find(query).cursor[Configuration].headOption
+  }
+
   def read(id: String) = withAuth { sess => implicit request => {
     Async {
-      val query = Json.obj(
-        "accountId" -> sess.user.accountIds.headOption,
-        "_id" -> BSONObjectID(id)
-      )
-      val res = cfgs.find(query).cursor[Configuration].headOption
-      jsonSerialize(res)
+      jsonSerialize(get(id, sess.defaultAccountId))
     }
   }}
 
@@ -42,7 +46,7 @@ object ConfigAPI extends JsonController with MongoController with Secured {
     val jsonBody = request.body.asJson.get.transform(addAccountId(sess.user.accountIds.headOption)).asOpt.get
     println(jsonBody)
     Async {
-      cfgs.save(jsonBody).map(_ => Ok)
+      cfgs.save(jsonBody).map { _ => Ok }
     }
   }}
 
@@ -52,21 +56,21 @@ object ConfigAPI extends JsonController with MongoController with Secured {
       BadRequest("new objects can not have IDs pre-assigned")
     }
     else {
-      val cfgWithAccount = newCfg.copy(accountId = sess.user.defaultAccountId)
+      val cfgWithAccount = newCfg.copy(accountId = sess.defaultAccountId)
       Async {
         cfgs.save(cfgWithAccount).map { _=>  Ok }
       }
     }
   }}
 
-  def update(id: String) = Action(parse.json) { request =>
+  def update(id: String) = withAuth(parse.json) { sess => implicit req => {
     Async {
-      withConfiguration { cfg =>
-        cfgs.save(request.body).map(lastError =>
-          Ok("Mongo LastErorr:%s".format(lastError)))
-      }
+      for {
+        newCfg <- Future(req.body.as[Configuration])
+        oldCfg <- get(id, sess.defaultAccountId)
+      } yield Ok((oldCfg.toString, newCfg.toString).toString)
     }
-  }
+  }}
 
   def component(id: String) = withAuth { username => implicit request =>
     Async {
