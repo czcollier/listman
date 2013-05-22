@@ -13,9 +13,10 @@ object forms {
   val fieldInfoMapping = mapping(
     "id" -> optional(of[String]),
     "name" -> optional(of[String]),
+    "label" -> optional(of[String]),
     "dataType" -> optional(of[String]))
-    { (id, name, dataType) => FieldInfo(id.map( BSONObjectID(_)), name, dataType) }
-    { fi => Some(fi._id.map(_.stringify), fi.name, fi.dataType) }
+    { (id, name, label, dataType) => FieldInfo(id.map( BSONObjectID(_)), name, label, dataType) }
+    { fi => Some(fi._id.map(_.stringify), fi.name, fi.label, fi.dataType) }
 
   val fieldForm = Form(
     fieldInfoMapping

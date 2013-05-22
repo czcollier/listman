@@ -4,6 +4,7 @@ import play.modules.reactivemongo.MongoController
 import models.{Configuration, ComponentInfo}
 import scala.concurrent.Future
 import play.api.mvc.Action
+<<<<<<< Updated upstream
 import reactivemongo.bson.BSONObjectID
 import play.api.libs.json._
 import play.modules.reactivemongo.json.BSONFormats._
@@ -11,6 +12,10 @@ import reactivemongo.core.commands.Status.ResultMaker
 
 //this is necessary
 import JsonCodec._
+=======
+import reactivemongo.bson.{BSONObjectID, BSONDocument}
+import play.api.libs.json._
+>>>>>>> Stashed changes
 
 object ConfigAPI extends JsonController with MongoController with Secured {
 
@@ -34,13 +39,20 @@ object ConfigAPI extends JsonController with MongoController with Secured {
     }
   }}
 
+  def createWithTransform = withAuth { sess => implicit request => {
+    val xfrm = (__).json.update(__.read[JsObject].map { o => o ++ Json.obj("accountId" -> sess.user.accountIds.headOption) } )
+    val jsonBody = request.body.asJson.get.transform(xfrm).asOpt.get
+    println(jsonBody)
+    Async {
+      cfgs.save(jsonBody).map(lastError =>
+        Ok("Mongo LastErorr:%s".format(lastError)))
+    }
+  }}
+
   def create = withAuth(parse.json) { sess => implicit req => {
-    println("foo1")
     val newCfg = req.body.asOpt[Configuration]
     Async {
-      cfgs.save(newCfg).map(result => {
-        Ok
-      })
+      cfgs.save(newCfg).map { _=>  Ok }
     }
   }}
 

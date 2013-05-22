@@ -16,9 +16,10 @@ case class ComponentInfo(
 case class FieldInfo(
   _id: Option[BSONObjectID],
   name: Option[String],
+  label: Option[String],
   dataType: Option[String]) {
 
-  def this() = this(Some(BSONObjectID.generate), Some(""), Some(""))
+  def this() = this(Some(BSONObjectID.generate), Some(""), Some(""), Some(""))
 }
 
 case class User(
