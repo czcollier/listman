@@ -4,13 +4,16 @@ import play.modules.reactivemongo.MongoController
 import models.{Configuration, ComponentInfo}
 import scala.concurrent.Future
 import play.api.mvc.Action
-import reactivemongo.bson.{BSONObjectID, BSONDocument}
-import play.api.libs.json.{JsObject, Json}
+import reactivemongo.bson.BSONObjectID
+import play.api.libs.json._
+import play.modules.reactivemongo.json.BSONFormats._
+import reactivemongo.core.commands.Status.ResultMaker
+
+//this is necessary
+import JsonCodec._
 
 object ConfigAPI extends JsonController with MongoController with Secured {
 
-  import JsonCodec._
-  import play.modules.reactivemongo.json.BSONFormats._
 
   def list = withAuth { sess => implicit request => {
     Async {
@@ -31,12 +34,15 @@ object ConfigAPI extends JsonController with MongoController with Secured {
     }
   }}
 
-  def create = Action(parse.json) { request =>
+  def create = withAuth(parse.json) { sess => implicit req => {
+    println("foo1")
+    val newCfg = req.body.asOpt[Configuration]
     Async {
-      cfgs.save(request.body).map(lastError =>
-        Ok("Mongo LastErorr:%s".format(lastError)))
+      cfgs.save(newCfg).map(result => {
+        Ok
+      })
     }
-  }
+  }}
 
   def update(id: String) = Action(parse.json) { request =>
     Async {

@@ -87,6 +87,13 @@ trait Secured {
     }
   }
 
+  def withAuth[A](bodyParser: BodyParser[A])(f: => LMSession => Request[A] => Result) = {
+    import play.api.Play.current
+    Security.Authenticated(getSession, onUnauthorized) { user =>
+      Action(bodyParser)(request => f(user)(request))
+    }
+  }
+
   implicit def lmSession(implicit request: RequestHeader): Option[LMSession] = {
     import play.api.Play.current
     getSession(request)
