@@ -3,6 +3,8 @@
 # ~~~~
 
 GET     /experiments/merge              controllers.Experiments.merge
+GET     /experiments/merge2             controllers.Experiments.merge2
+GET     /experiments/merge3             controllers.Experiments.merge3
 
 # Configuration UI
 GET     /                               controllers.ConfigUI.index

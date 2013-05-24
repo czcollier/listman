@@ -2,8 +2,12 @@ package controllers
 
 import play.api.mvc.Action
 import play.api.libs.json._
+import libs.JsonManip._
 
 object Experiments extends JsonController {
+
+  val mj = JsString("foo")
+  val mj2 = JsString("bar")
 
   val myJson = Json.obj(
     "key1" -> "value1",
@@ -28,15 +32,15 @@ object Experiments extends JsonController {
     "key4" -> 235
   )
 
-  def rMerge(obj: JsObject) = {
-    (__).json.update(__.read[JsObject]).map { o =>
-      o.fields.map { f =>
-        f._2 match {
-          case no: JsObject => "x"
-          case _ => "y"
-        }
-      }
-    }
+
+  def merge3 = Action {
+    val nj = myJson.deepMerge(yourJson)
+    Ok(Json.prettyPrint(Json.toJson(nj)))
+  }
+
+  def merge2 = Action {
+    val nj = mj.deepMerge2(yourJson)
+    Ok(Json.prettyPrint(Json.toJson(nj)))
   }
 
   def merge = Action {
