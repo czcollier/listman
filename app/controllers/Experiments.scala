@@ -32,11 +32,13 @@ object Experiments extends JsonController {
     (__).json.update(__.read[JsObject]).map { o =>
       o.fields.map { f =>
         f._2 match {
-          case no: JsObject => 
+          case no: JsObject => "x"
+          case _ => "y"
         }
       }
     }
   }
+
   def merge = Action {
     val xfrm = (__).json.update(__.read[JsObject]).map { obj => obj ++ yourJson }
     val newJson = myJson.transform(xfrm)
