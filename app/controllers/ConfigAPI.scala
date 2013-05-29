@@ -21,27 +21,18 @@ object ConfigAPI extends JsonController with MongoController with Secured {
     }
   }}
 
-  private def get(id: String, acctId: Option[BSONObjectID]) = {
+  private def getAs[T](id: String, acctId: Option[BSONObjectID])(implicit reads: play.api.libs.json.Reads[T]) = {
     val query = Json.obj(
       "accountId" -> acctId,
       "_id" -> BSONObjectID(id)
     )
 
-    cfgs.find(query).cursor[Configuration].headOption
-  }
-
-  private def get2(id: String, acctId: Option[BSONObjectID]) = {
-    val query = Json.obj(
-      "accountId" -> acctId,
-      "_id" -> BSONObjectID(id)
-    )
-
-    cfgs.find(query).cursor[JsObject].headOption
+    cfgs.find(query).cursor[T].headOption
   }
 
   def read(id: String) = withAuth { sess => implicit request => {
     Async {
-      jsonSerialize(get(id, sess.defaultAccountId))
+      jsonSerialize(getAs[Configuration](id, sess.defaultAccountId))
     }
   }}
 
@@ -60,14 +51,14 @@ object ConfigAPI extends JsonController with MongoController with Secured {
 
   def update(id: String) = withAuth(parse.json) { sess => implicit req => {
     val newCfg = req.body.as[JsObject]
-    val oldCfg = get2(id, sess.defaultAccountId)
+    val oldCfg = getAs[JsObject](id, sess.defaultAccountId)
 
     Async {
-       oldCfg.flatMap { oc => {
-         val merged = oc.get.deepMerge2(newCfg).as[Configuration]
-         val withAccount = merged.copy(accountId = sess.defaultAccountId)
-         cfgs.save(withAccount).map { _ => Ok }
-       }}
+      oldCfg.flatMap { oc => {
+        val merged = oc.get.deepMerge2(newCfg).as[Configuration]
+        val withAccount = merged.copy(accountId = sess.defaultAccountId)
+        cfgs.save(withAccount).map { _ => Ok }
+      }}
     }
   }}
 
