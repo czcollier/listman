@@ -23,11 +23,14 @@ object Experiments extends JsonController {
     "key3" -> 234
   )
 
+  object JsUndefine extends JsUndefined("no value")
+
   val yourJson = Json.obj(
     "key1" -> "newValue1",
     "key2" -> Json.obj(
       "key21" -> 121213,
-      "key23" -> Json.arr("alpha", "bravo", "charlie")
+      "key23" -> Json.arr("alpha", "bravo", "charlie"),
+      "key24" -> Json.obj("key241" -> JsUndefine, "key243" -> false)
     ),
     "key4" -> 235
   )
@@ -39,7 +42,7 @@ object Experiments extends JsonController {
   }
 
   def merge2 = Action {
-    val nj = mj.deepMerge2(yourJson)
+    val nj = myJson.deepMerge2(yourJson)
     Ok(Json.prettyPrint(Json.toJson(nj)))
   }
 

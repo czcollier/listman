@@ -3,10 +3,10 @@ package controllers
 import play.modules.reactivemongo.MongoController
 import models.{Configuration, ComponentInfo}
 import scala.concurrent.Future
-import play.api.mvc.Action
 import reactivemongo.bson.BSONObjectID
 import play.api.libs.json._
 import play.modules.reactivemongo.json.BSONFormats._ //this is necessary
+import libs.JsonManip._
 
 import JsonCodec._
 
@@ -30,23 +30,18 @@ object ConfigAPI extends JsonController with MongoController with Secured {
     cfgs.find(query).cursor[Configuration].headOption
   }
 
+  private def get2(id: String, acctId: Option[BSONObjectID]) = {
+    val query = Json.obj(
+      "accountId" -> acctId,
+      "_id" -> BSONObjectID(id)
+    )
+
+    cfgs.find(query).cursor[JsObject].headOption
+  }
+
   def read(id: String) = withAuth { sess => implicit request => {
     Async {
       jsonSerialize(get(id, sess.defaultAccountId))
-    }
-  }}
-
-  def addAccountId(id: Option[BSONObjectID]) = (__).json.update {
-    __.read[JsObject].map {
-      o => o ++ Json.obj("accountId" -> id)
-    }
-  }
-
-  def createWithTransform = withAuth { sess => implicit request => {
-    val jsonBody = request.body.asJson.get.transform(addAccountId(sess.user.accountIds.headOption)).asOpt.get
-    println(jsonBody)
-    Async {
-      cfgs.save(jsonBody).map { _ => Ok }
     }
   }}
 
@@ -64,11 +59,15 @@ object ConfigAPI extends JsonController with MongoController with Secured {
   }}
 
   def update(id: String) = withAuth(parse.json) { sess => implicit req => {
+    val newCfg = req.body.as[JsObject]
+    val oldCfg = get2(id, sess.defaultAccountId)
+
     Async {
-      for {
-        newCfg <- Future(req.body.as[Configuration])
-        oldCfg <- get(id, sess.defaultAccountId)
-      } yield Ok((oldCfg.toString, newCfg.toString).toString)
+       oldCfg.flatMap { oc => {
+         val merged = oc.get.deepMerge2(newCfg).as[Configuration]
+         val withAccount = merged.copy(accountId = sess.defaultAccountId)
+         cfgs.save(withAccount).map { _ => Ok }
+       }}
     }
   }}
 
