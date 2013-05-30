@@ -2,8 +2,7 @@ package controllers
 
 import play.api.mvc.Controller
 import scala.concurrent.Future
-import play.api.libs.json.Writes
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Writes, Json}
 import play.modules.reactivemongo.MongoController
 import play.modules.reactivemongo.json.collection.JSONCollection
 import models.Configuration
@@ -27,6 +26,9 @@ trait JsonController extends Controller with MongoController {
     }
   }
 
+  def rewrite(v: JsValue) = {
+
+  }
   def withConfiguration[T](op: Configuration => Future[T]) = {
     for {
       cfg <- cfgs.find(byId(stockId)).cursor[Configuration].toList

@@ -5,27 +5,27 @@ import models.{Configuration, ComponentInfo}
 import scala.concurrent.Future
 import reactivemongo.bson.BSONObjectID
 import play.api.libs.json._
-import play.modules.reactivemongo.json.BSONFormats._ //this is necessary
 import libs.JsonManip._
-
-import JsonCodec._
 
 object ConfigAPI extends JsonController with MongoController with Secured {
 
+  import JsonCodec._
 
   def list = withAuth { sess => implicit request => {
     Async {
-      val query = Json.obj("accountId" -> sess.user.accountIds.headOption)
+      val query = Json.obj("accountId" -> Json.obj("$oid" -> sess.user.accountIds.headOption))
       val res = cfgs.find(query).cursor[Configuration].toList
       jsonSerialize(res)
     }
   }}
 
-  private def getAs[T](id: String, acctId: Option[BSONObjectID])(implicit reads: play.api.libs.json.Reads[T]) = {
-    val query = Json.obj(
-      "accountId" -> acctId,
-      "_id" -> BSONObjectID(id)
-    )
+  private def mkIdQuery(k: String, v: String) = (k -> ("$oid" -> v))
+
+  private def getAs[T](id: Option[String], acctId: Option[BSONObjectID])(implicit reads: play.api.libs.json.Reads[T]) = {
+
+    var query = Json.obj(("accountId" -> ("$oid" -> acctId))) ++ Json.obj()
+    if (id.isDefined)
+      query += ("_id" -> Json.obj("$oid" -> id.get))
 
     cfgs.find(query).cursor[T].headOption
   }

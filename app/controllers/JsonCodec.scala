@@ -7,8 +7,6 @@ import play.api.libs.json.Json.JsValueWrapper
 
 object JsonCodec {
   import play.api.libs.json.Json
-  import play.modules.reactivemongo.json.BSONFormats._
-
   implicit val objectIdFormat = Format[BSONObjectID](
     (__ \ "$oid").read[String].map { s =>
       BSONObjectID(s)
