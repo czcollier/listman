@@ -12,7 +12,6 @@ import JsonCodec._
 
 object ConfigAPI extends JsonController with MongoController with Secured {
 
-
   def list = withAuth { sess => implicit request => {
     Async {
       val query = Json.obj("accountId" -> sess.user.accountIds.headOption)
