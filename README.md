@@ -1,4 +1,4 @@
 Listman
 =====================================
 
-Play application providing a REST API 
+Play application providing a generalizable REST API on top of a MongoDB database
